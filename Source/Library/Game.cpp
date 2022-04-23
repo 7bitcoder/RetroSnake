@@ -74,14 +74,15 @@ void Game::update()
     auto newHeadPos = moveCoord(_direction, _snake.getHeadCoord());
 
     auto targetField = _board.getField(newHeadPos);
+    if (targetField == Board::Border)
+    {
+        newHeadPos = _board.normalize(newHeadPos);
+        targetField = _board.getField(newHeadPos);
+    }
     if (targetField == Board::Snake)
     {
         _state = State::Over;
         return;
-    }
-    if (targetField == Board::Border)
-    {
-        newHeadPos = _board.normalize(newHeadPos);
     }
 
     auto eat = targetField == Board::Food;
