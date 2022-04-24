@@ -13,7 +13,7 @@ enum Key
 class OsApi
 {
   private:
-    OsApi() = default;
+    OsApi();
 
   public:
     OsApi(OsApi const &) = delete;

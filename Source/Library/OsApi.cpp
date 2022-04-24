@@ -22,6 +22,8 @@
 namespace
 {
 #ifdef WINDOWS
+    void initOs() {}
+
     Key getCurrentKeyPressedOs()
     {
         if ((1 << 15) & GetAsyncKeyState(VK_UP))
@@ -51,35 +53,41 @@ namespace
 #endif
 
 #ifdef LINUX
+    void initOs() {
+
+    }
+
     Key getCurrentKeyPressedOs()
     {
-        if ((1 << 15) & GetAsyncKeyState(VK_UP))
-        {
-            return Key::Up;
-        }
-        if ((1 << 15) & GetAsyncKeyState(VK_DOWN))
-        {
-            return Key::Down;
-        }
-        if ((1 << 15) & GetAsyncKeyState(VK_LEFT))
-        {
-            return Key::Left;
-        }
-        if ((1 << 15) & GetAsyncKeyState(VK_RIGHT))
-        {
-            return Key::Right;
-        }
+        int ch = getchar(); 
+        // if (ch == KEY_UP)  
+        // {
+        //     return Key::Up;
+        // }
+        // if (ch == KEY_DOWN)  
+        // {
+        //     return Key::Down;
+        // }
+        // if (ch == KEY_LEFT)  
+        // {
+        //     return Key::Left;
+        // }
+        // if (ch == KEY_RIGHT)  
+        // {
+        //     return Key::Right;
+        // }
         return Key::None;
     }
 
     void clearConsoleOs()
     {
-        HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-        SetConsoleCursorPosition(hOut, {.X = 0, .Y = 0});
+        printf("\033[2J\033[1;1H");
     }
 #endif
 
 } // namespace
+
+OsApi::OsApi() { initOs(); }
 
 OsApi &OsApi::instance()
 {
