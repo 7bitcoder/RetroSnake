@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 
+#include "IDrawable.h"
 
 using Coord = std::pair<size_t, size_t>;
 enum class Direction
@@ -40,6 +41,8 @@ class Board
     void clear();
 
     Coord normalize(Coord coord);
+
+    void draw(const IDrawable &drawable);
 
     friend std::ostream &operator<<(std::ostream &output, const Board &board);
 };

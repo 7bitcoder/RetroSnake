@@ -75,6 +75,8 @@ Coord Board::normalize(Coord coord)
     return {x, y};
 }
 
+void Board::draw(const IDrawable &drawable) { drawable.draw(*this); }
+
 std::ostream &operator<<(std::ostream &output, const Board &board)
 {
     std::stringstream out;

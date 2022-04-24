@@ -3,59 +3,63 @@
 #include <sstream>
 #include <thread>
 #include <time.h>
-#include <windows.h>
-#include <winuser.h>
 
+#include "Board.h"
 #include "Game.h"
+#include "OsApi.h"
 
 using namespace std::chrono_literals;
 
 namespace
 {
-    const double FRAMERATE = 5.0;
-
-    Coord moveCoord(Direction direction, Coord coord)
+    Direction keyToDirection(Key key)
     {
-        switch (direction)
+        if (key == Key::Up)
         {
-        case Direction::Up:
-            coord.first--;
-            break;
-        case Direction::Down:
-            coord.first++;
-            break;
-        case Direction::Left:
-            coord.second--;
-            break;
-        case Direction::Right:
-            coord.second++;
-            break;
+            return Direction::Up;
         }
-        return coord;
+        if (key == Key::Down)
+        {
+            return Direction::Down;
+        }
+        if (key == Key::Right)
+        {
+            return Direction::Right;
+        }
+        if (key == Key::Left)
+        {
+            return Direction::Left;
+        }
+        return Direction::Up;
     }
 } // namespace
 
 Game::Game(size_t width, size_t height) : _board(width, height), _snake(width / 2, height / 2)
 {
     srand(time(NULL));
-    _board << _snake;
+    _board.draw(_snake);
     spawnNewFood();
-    _board << _food;
+    _board.draw(_food);
 }
 
 void Game::run()
 {
-    auto oneFrameTimeMs = std::chrono::milliseconds{int(1000.0 / FRAMERATE)};
+    Direction currentDirection = Direction::Up;
+
+    auto oneFrameTimeMs = std::chrono::milliseconds{int(1000.0 / _gameSpeed)};
     auto lastFrameTime = std::chrono::high_resolution_clock::now();
     while (_state == State::Ok)
     {
         std::this_thread::sleep_for(200us);
-        checkDirection();
+        if (auto keyPressed = OsApi::instance().getCurrentKeyPressed(); keyPressed != Key::None)
+        {
+            currentDirection = keyToDirection(keyPressed);
+        }
 
         if (std::chrono::high_resolution_clock::now() - lastFrameTime > oneFrameTimeMs)
         {
             lastFrameTime = std::chrono::high_resolution_clock::now();
-            update();
+            update(currentDirection);
             print();
         }
     }
@@ -69,15 +73,17 @@ void Game::run()
     }
 }
 
-void Game::update()
+void Game::update(Direction direction)
 {
-    auto newHeadPos = moveCoord(_direction, _snake.getHeadCoord());
+    _snake.move(direction);
 
-    auto targetField = _board.getField(newHeadPos);
+    auto headCoord = _snake.getHeadCoord();
+    auto targetField = _board.getField(headCoord);
     if (targetField == Board::Border)
     {
-        newHeadPos = _board.normalize(newHeadPos);
-        targetField = _board.getField(newHeadPos);
+        headCoord = _board.normalize(headCoord);
+        _snake.setHeadCoord(headCoord);
+        targetField = _board.getField(headCoord);
     }
     if (targetField == Board::Snake)
     {
@@ -85,44 +91,21 @@ void Game::update()
         return;
     }
 
-    auto eat = targetField == Board::Food;
-    _snake.move(newHeadPos, _direction, eat);
-
     _board.clear();
-    _board << _snake;
+    _board.draw(_snake);
 
-    if (eat)
+    if (targetField == Board::Food)
     {
         _points++;
+        _snake.grow();
         spawnNewFood();
     }
-    _board << _food;
-}
-
-void Game::checkDirection()
-{
-    if ((1 << 15) & GetAsyncKeyState(VK_UP) && _snake.getDirection() != Direction::Down)
-    {
-        _direction = Direction::Up;
-    }
-    else if ((1 << 15) & GetAsyncKeyState(VK_DOWN) && _snake.getDirection() != Direction::Up)
-    {
-        _direction = Direction::Down;
-    }
-    else if ((1 << 15) & GetAsyncKeyState(VK_LEFT) && _snake.getDirection() != Direction::Right)
-    {
-        _direction = Direction::Left;
-    }
-    else if ((1 << 15) & GetAsyncKeyState(VK_RIGHT) && _snake.getDirection() != Direction::Left)
-    {
-        _direction = Direction::Right;
-    }
+    _board.draw(_food);
 }
 
 void Game::print() const
 {
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    SetConsoleCursorPosition(hOut, {.X = 0, .Y = 0});
+    OsApi::instance().clearConsole();
 
     std::cout << "Points: " << _points << std::endl << _board;
 }

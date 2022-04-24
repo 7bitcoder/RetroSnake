@@ -9,6 +9,8 @@
 class Game
 {
   private:
+    double _gameSpeed = 5.0;
+
     int _points = 0;
     enum class State
     {
@@ -16,8 +18,6 @@ class Game
         Over,
         Won
     } _state = State::Ok;
-
-    Direction _direction = Direction::Up;
 
     Board _board;
     Snake _snake;
@@ -28,8 +28,7 @@ class Game
     void run();
 
   private:
-    void update();
+    void update(Direction direction);
     void print() const;
-    void checkDirection();
     void spawnNewFood();
 };

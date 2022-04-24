@@ -3,21 +3,27 @@
 #include <utility>
 
 #include "Board.h"
+#include "IDrawable.h"
 
-class Snake
+class Snake : public IDrawable
 {
   private:
-    Direction _movingDir;
+    int _growCnt = 0;
+    Direction _movingDir = Direction::Up;
     std::list<Coord> _coords;
 
   public:
     Snake(size_t posX, size_t posY);
 
     Coord getHeadCoord() const;
+    void setHeadCoord(Coord newHeadPos);
 
-    void move(Coord newHeadPos, Direction dir, bool grow = false);
+    void move(Direction direction);
 
-    Direction getDirection() const;
+    void grow();
 
-    friend Board &operator<<(Board &board, const Snake &snake);
+    void draw(Board &board) const final;
+
+  private:
+    void updateDirection(Direction direction);
 };

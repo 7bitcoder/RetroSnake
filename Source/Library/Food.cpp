@@ -2,8 +2,6 @@
 
 Food::Food(Coord coords) : _coords(coords) {}
 
-Board &operator<<(Board &board, const Food &food)
-{
-    board.setField(food._coords, Board::Food);
-    return board;
-}
+void Food::draw(Board &board) const { board.setField(_coords, Board::Food); }
+
+Board &operator<<(Board &board, const Food &food) { return board; }
